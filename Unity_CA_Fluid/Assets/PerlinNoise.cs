@@ -54,11 +54,46 @@ namespace FluidCA.Util
         /// <param name="height"></param>
         /// <param name="detail"></param>
         /// <returns></returns>
-        public static List<float> generatePerlinNoise(int width, int height, float detail)
+        public static List<List<float>> generatePerlinNoise(int width, int height, float detail, float variance)
         {
-            List<float> noise = new List<float>();
+            List<List<float>> noise = new List<List<float>>();
+            noise.Add(generatePerlin1Dim(width, 0, variance, detail));
+            for (int i = 0; i < height; ++i)
+            {
+                var prev = noise[noise.Count - 1];
+                var next = generatePerlin1Dim(width, 50, 50f, detail);
 
-            return noise;
+                noise.Add(prev);
+                for (int j = 1; j < detail - 1f; ++j)
+                {
+                    var curr = new List<float>();
+                    curr.Capacity = width;
+                    for (int k = 0; k < curr.Capacity; ++k)
+                    {
+                        var val = Mathf.Round(Mathf.Lerp(k / detail, prev[k], next[k]));
+                        curr[k] = (float.NaN == val ? 0 : val);
+                    }
+                    noise.Add(curr);
+                }
+                noise.Add(next);
+            }
+
+            for (int i = 1; i < width-1; ++i)
+            {
+                for (int j = 1; j < height - 1; ++j)
+                {
+                    float agg = 0;
+                    for (int k = i - 1; k < i + 2; ++k)
+                    {
+                        for (int n = j - 1; n < j + 2; ++n)
+                        {
+                            agg = noise[k][n];
+                        }
+                    }
+                    noise[i][j] = Mathf.Round(agg / 9f);
+                }
+            }
+                return noise;
         }
 
     }

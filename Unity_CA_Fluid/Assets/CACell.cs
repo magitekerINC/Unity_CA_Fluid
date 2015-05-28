@@ -5,16 +5,8 @@ using FluidCA.Util;
 namespace FluidCA.Sim
 {
 
-    public interface Cell
-    {
 
-        void Start();
-        void Process();
-        void End();
-
-    }
-
-    public class CAField<T> where T : Cell
+    public class CAField<T>
     {
 
         private int Width, Height;
@@ -135,9 +127,13 @@ namespace FluidCA.Sim
 
     }
 
-    public class CACell : MonoBehaviour, Cell
+    public enum CellType { Solid = 0, Air = 1, Water = 2, NumTypes }
+
+    public class CACell : MonoBehaviour
     {
+        public FluidSim sim { get; set; }
         public int cellID { get; set; }
+
         // Use this for initialization
         void Start()
         {
@@ -151,19 +147,5 @@ namespace FluidCA.Sim
 #endif
         }
 
-        void Cell.Start()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Process()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void End()
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }
