@@ -22,9 +22,9 @@ namespace FluidCA.Sim
 
         public float Width { get; set; }
         public float Height { get; set; }
-        public float MinMass { get; set; }
-        public float MaxMass { get; set; }
-        public float MaxCompress { get; set; }
+        public float MinMass { get; set; }  //TODO
+        public float MaxMass { get; set; }  //TODO
+        public float MaxCompress { get; set; } //TODO
         public float Offset { get; set; }
         public float Speed { get; set; }
         public float Detail { get; set; }
@@ -32,7 +32,7 @@ namespace FluidCA.Sim
         public bool runSim { get; set; }
         public float simTimer = 0f;
         public float TimeUnit = 3000f;
-        private float ratio = 0f;
+        public float ratio = 0f, Row = 0f, Column= 0f;
         private int Count = 0;
 
         public CACell cellPrefab;
@@ -115,16 +115,37 @@ namespace FluidCA.Sim
 
 
             Count = count;
-            Debug.Log("Count: " + count);
 
+            Row = Mathf.Ceil(end.y / (cellPrefab.transform.localScale.y * ratio + offset.y));
+            Column = Mathf.Ceil(end.x / (cellPrefab.transform.localScale.x * ratio + offset.x));
 
-            var row = Mathf.Ceil(end.y / (cellPrefab.transform.localScale.y * ratio + offset.y));
-            var col = Mathf.Ceil(end.x / (cellPrefab.transform.localScale.x * ratio + offset.x));
-
-            Debug.Log(row + " " + col);
 
             //caFront = new CAField<CellData>(Width, Height);
             //caBack = new CAField<CellData>(Width, Height);
+        }
+
+
+        private Vector2 getPosition(int index)
+        {
+            if (index >= Count)
+            {
+                return Vector2.zero;
+            }
+
+            Vector2 result = Vector2.zero;
+            result.x = Mathf.Ceil(index % Row);
+            result.y = Mathf.Floor(index / Row);
+
+            return result;
+        }
+
+        private int getIndex(Vector2 pos)
+        {
+            int result = 0;
+
+            result = (int)(pos.y + (pos.x * Column));
+
+            return result;
         }
 
 
