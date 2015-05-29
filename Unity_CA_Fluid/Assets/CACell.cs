@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using FluidCA.Util;
+using System;
 
 namespace FluidCA.Sim
 {
@@ -12,10 +13,10 @@ namespace FluidCA.Sim
         private int Width, Height;
         private T[,] cells;
 
-        public CAField(int _width, int _height)
+        public CAField(float _width, float _height)
         {
-            Width = _width;
-            Height = _height;
+            Width = (int)_width;
+            Height = (int)_height;
 
             cells = new T[Width, Height];
 
@@ -125,6 +126,11 @@ namespace FluidCA.Sim
             this.cells = _other.getCells();
         }
 
+        public void Clear()
+        {
+            Array.Clear(cells, 0, cells.Length);
+        }
+
     }
 
     public enum CellType { Solid = 0, Air = 1, Water = 2, NumTypes }
@@ -140,10 +146,13 @@ namespace FluidCA.Sim
 
         }
 
-        void OnMouseDown()
+        void OnMouseOver()
         {
 #if UNITY_EDITOR
-            Debug.Log(cellID);
+            if (Input.GetMouseButton(0))
+            {
+                Debug.Log(cellID);
+            }
 #endif
         }
 

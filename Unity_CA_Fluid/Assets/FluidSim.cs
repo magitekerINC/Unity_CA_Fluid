@@ -22,6 +22,9 @@ namespace FluidCA.Sim
 
         public float Width { get; set; }
         public float Height { get; set; }
+        public float MinMass { get; set; }
+        public float MaxMass { get; set; }
+        public float MaxCompress { get; set; }
         public float Offset { get; set; }
         public float Speed { get; set; }
         public float Detail { get; set; }
@@ -30,9 +33,11 @@ namespace FluidCA.Sim
         public float simTimer = 0f;
         public float TimeUnit = 3000f;
         private float ratio = 0f;
+        private int Count = 0;
 
         public CACell cellPrefab;
         private List<CACell> cellList = new List<CACell>();
+        private CAField<CellData> caFront, caBack;
 
         // Use this for initialization
         void Start()
@@ -48,6 +53,8 @@ namespace FluidCA.Sim
             TimeUnit = 60f / Time.deltaTime;
 
             Init();
+            caFront = new CAField<CellData>(Width, Height);
+            caBack = new CAField<CellData>(Width, Height);
         }
 
         public void Reset()
@@ -64,6 +71,8 @@ namespace FluidCA.Sim
             }
 
             cellList.Clear();
+            caFront.Clear();
+            caBack.Clear();
         }
 
         void Init()
@@ -95,15 +104,27 @@ namespace FluidCA.Sim
 
                 cellList.Add(gObj);
 
-                pos.x += cellPrefab.transform.localScale.x * ratio + offset.x;
+                pos.x += (cellPrefab.transform.localScale.x * ratio) + offset.x;
                 if (pos.x > end.x)
                 {
                     pos.x = corner.x;
-                    pos.y += cellPrefab.transform.localScale.y * ratio + offset.y;
+                    pos.y += (cellPrefab.transform.localScale.y * ratio) + offset.y;
                 }
 
             }
-           
+
+
+            Count = count;
+            Debug.Log("Count: " + count);
+
+
+            var row = Mathf.Ceil(end.y / (cellPrefab.transform.localScale.y * ratio + offset.y));
+            var col = Mathf.Ceil(end.x / (cellPrefab.transform.localScale.x * ratio + offset.x));
+
+            Debug.Log(row + " " + col);
+
+            //caFront = new CAField<CellData>(Width, Height);
+            //caBack = new CAField<CellData>(Width, Height);
         }
 
 
@@ -123,12 +144,88 @@ namespace FluidCA.Sim
 
         void TickCA()
         {
+            float flowScore = 0f;
+            for (int x = 0; x < Width; ++x)
+            {
+                for (int y = 0; y < Height; ++y)
+                {
+                    var curr = caFront.getCell(x, y);
+                    if (curr.cType == CellType.Solid || curr.cellMass <= 0)
+                    {
+                        continue;
+                    }
 
+                    //Below
+                    if (y - 1 >= 0)
+                    {
+
+                    }
+
+                    //Left
+                    if (x + 1 < Width)
+                    {
+
+                    }
+
+                    //Right
+                    if (x - 1 >= 0)
+                    {
+
+                    }
+
+                    //Above
+                    if (y + 1 < Height)
+                    {
+
+                    }
+
+                }
+            }
+
+            for (int x = 0; x < Width; ++x)
+            {
+                for (int y = 0; y < Height; ++y)
+                {
+                    var curr = caFront.getCell(x, y);
+                    if (curr.cType == CellType.Solid)
+                    {
+                        continue;
+                    }
+
+                    if (curr.cellMass > MinMass)
+                    {
+                        curr.cType = CellType.Water;
+                    }
+                    else
+                    {
+                        curr.cType = CellType.Air;
+                        curr.cellMass = 0f;
+                    }
+                }
+            }
         }
 
         public CellData getCellData(int id)
         {
-            throw new System.NotImplementedException();
+            if (id < Count && caFront != null)
+            {
+                int xPos = (int)(id % Width);
+                int yPos = (int)((id - xPos) / Width);
+
+                return caFront.getCell(xPos, yPos);
+            }
+
+            throw new System.IndexOutOfRangeException();
+        }
+
+        private float stableMass(float mass)
+        {
+            if (mass <= 1f)
+                return 1f;
+            else if (mass < 2 * MaxMass + MaxCompress)
+                return (MaxMass * MaxMass + mass * MaxCompress) / (MaxMass + MaxCompress);
+            else
+                return (mass + MaxCompress) * 0.5f;
         }
 
 #if UNITY_EDITOR
