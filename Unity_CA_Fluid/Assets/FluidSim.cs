@@ -22,9 +22,9 @@ namespace FluidCA.Sim
 
         public float Width { get; set; }
         public float Height { get; set; }
-        public float MinMass { get; set; }  //TODO
-        public float MaxMass { get; set; }  //TODO
-        public float MaxCompress { get; set; } //TODO
+        public float MinMass { get; set; } 
+        public float MaxMass { get; set; }  
+        public float MaxCompress { get; set; } 
         public float Offset { get; set; }
         public float Speed { get; set; }
         public float Detail { get; set; }
@@ -32,7 +32,8 @@ namespace FluidCA.Sim
         public bool runSim { get; set; }
         public float simTimer = 0f;
         public float TimeUnit = 3000f;
-        public float ratio = 0f, Row = 0f, Column= 0f;
+        public float ratio = 0f, Row = 0f, Column= 0f,
+            minFlow = 0.01f, maxFlow = 0.5f;
         private int Count = 0;
 
         public CACell cellPrefab;
@@ -40,14 +41,14 @@ namespace FluidCA.Sim
         private CAField<CellData> caFront, caBack;
 
         // Use this for initialization
-        void Start()
+        void Awake()
         {
             runSim = false;
             Width = Screen.width;
             Height = Screen.height;
             ratio = Height / Width;
             Offset = 0.001f;
-            Speed = 1f;
+            Speed = 1000f;
             Detail = 10f;
             Variance = 10f;
             TimeUnit = 60f / Time.deltaTime;
@@ -165,6 +166,12 @@ namespace FluidCA.Sim
 
         void TickCA()
         {
+#if UNITY_EDITOR
+            Debug.Log("Tick");
+#endif
+            if (caFront == null || caBack == null)
+                return;
+
             float flowScore = 0f;
             for (int x = 0; x < Width; ++x)
             {

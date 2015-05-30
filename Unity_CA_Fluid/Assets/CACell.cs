@@ -146,15 +146,6 @@ namespace FluidCA.Sim
 
         }
 
-        void OnMouseOver()
-        {
-#if UNITY_EDITOR
-            if (Input.GetMouseButton(0))
-            {
-                Debug.Log(cellID);
-            }
-#endif
-        }
 
     }
 }

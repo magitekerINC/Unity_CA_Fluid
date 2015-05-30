@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 namespace FluidCA.Sim
 {
@@ -9,16 +10,35 @@ namespace FluidCA.Sim
 
         private FluidSim sim;
 
+        public float SimMinMass
+        {
+            get { return sim.MinMass; }
+            set { sim.MinMass = value; }
+        }
+
+        public float SimMaxMass
+        {
+            get { return sim.MaxMass; }
+            set { sim.MaxMass = value; }
+        }
+
+        public float SimMaxCompress
+        {
+            get { return sim.MaxCompress; }
+            set { sim.MaxCompress = value; }
+        }
+
         public float SimWidth 
         {
             get { return sim.Width; }
-            set { sim.Width = value;} 
+            set { sim.Width = value; } 
         }
 
         public float SimHeight 
         {
             get { return sim.Height; }
-            set { sim.Height = value; } 
+            set { sim.Height = value; }
+            
         }
 
         public float SimOffset
@@ -51,6 +71,17 @@ namespace FluidCA.Sim
             set { sim.runSim = value; }
         }
 
+        public Slider widthSlider;
+        public Slider heightSlider;
+        public Slider detailSlider;
+        public Slider compSlider;
+        public Slider minMSlider;
+        public Slider maxMSlider;
+        public Slider speedSlider;
+        public Slider variSlider;
+        public Slider offsetSlider;
+        public Toggle runToggle;
+
         public GameObject OpenButton;
         public GameObject ControlPanel;
         // Use this for initialization
@@ -61,6 +92,19 @@ namespace FluidCA.Sim
                 ControlPanel.SetActive(false);
             if (!OpenButton.activeSelf)
                 OpenButton.SetActive(true);
+
+
+            widthSlider.value = SimWidth;
+            heightSlider.value = SimHeight;
+            detailSlider.value = PerlinDetail;
+            variSlider.value = PerlinVariance;
+            speedSlider.value = SimSpeed;
+            offsetSlider.value = SimOffset;
+            minMSlider.value = SimMinMass;
+            maxMSlider.value = SimMaxMass;
+            compSlider.value = SimMaxCompress;
+            runToggle.isOn = PlaySim;
+
         }
 
        
