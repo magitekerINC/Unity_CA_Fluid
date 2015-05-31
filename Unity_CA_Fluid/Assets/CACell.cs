@@ -9,7 +9,6 @@ namespace FluidCA.Sim
 
     public class CAField<T>
     {
-
         private int Width, Height;
         private T[,] cells;
 
@@ -139,11 +138,14 @@ namespace FluidCA.Sim
     {
         public FluidSim sim { get; set; }
         public int cellID { get; set; }
+        public Color cellColor { set { rend.color = value; } }
+        private SpriteRenderer rend;
 
         // Use this for initialization
         void Start()
         {
-
+            rend = GetComponent<SpriteRenderer>();
+            
         }
 
 

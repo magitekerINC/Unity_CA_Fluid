@@ -22,6 +22,7 @@ namespace FluidCA.Sim
 
         public float Width { get; set; }
         public float Height { get; set; }
+        public float CellSize { get; set; }
         public float MinMass { get; set; } 
         public float MaxMass { get; set; }  
         public float MaxCompress { get; set; } 
@@ -30,10 +31,14 @@ namespace FluidCA.Sim
         public float Detail { get; set; }
         public float Variance { get; set; }
         public bool runSim { get; set; }
+        public float Row { get; set;}
+        public float Column {get; set;}
+
         public float simTimer = 0f;
         public float TimeUnit = 3000f;
-        public float ratio = 0f, Row = 0f, Column= 0f,
-            minFlow = 0.01f, maxFlow = 0.5f;
+        public float ratio = 0f;
+        public float minFlow = 0.01f, maxFlow = 0.5f;
+
         private int Count = 0;
 
         public CACell cellPrefab;
@@ -47,15 +52,18 @@ namespace FluidCA.Sim
             Width = Screen.width;
             Height = Screen.height;
             ratio = Height / Width;
-            Offset = 0.001f;
-            Speed = 1000f;
+            Offset = 0.005f;
+            Speed = 3000f;
             Detail = 10f;
             Variance = 10f;
             TimeUnit = 60f / Time.deltaTime;
-
+            MinMass = 0.1f;
+            MaxMass = 1f;
+            CellSize = cellPrefab.transform.localScale.x;
+            Row = 32f;
+            Column = 51f;
             Init();
-            caFront = new CAField<CellData>(Width, Height);
-            caBack = new CAField<CellData>(Width, Height);
+
         }
 
         public void Reset()
@@ -66,9 +74,9 @@ namespace FluidCA.Sim
 
         void CleanUp()
         {
-            foreach (CACell c in cellList)
+            for (int i = 0; i < cellList.Count; ++i)
             {
-                Destroy(c.gameObject);
+                Destroy(cellList[i].gameObject);
             }
 
             cellList.Clear();
@@ -78,51 +86,78 @@ namespace FluidCA.Sim
 
         void Init()
         {
-           
-       
+
             var corner = Camera.main.ScreenToWorldPoint(Vector3.zero);
-            var end = Camera.main.ScreenToWorldPoint(
+
+            /*var end = Camera.main.ScreenToWorldPoint(
                 new Vector3(
-                Width,
-                Height
-                ));
+                Screen.width,
+                Screen.height
+                ));*/
 
             var offset = new Vector3(Offset, Offset);
 
+            var end = new Vector2(
+                (offset.x + CellSize * ratio) * Column,
+                (offset.y + CellSize * ratio) * Row
+                );
+
+         
             //corner *= ratio;
             corner.z = 1f;
 
             var pos = corner;
             var count = 0;
 
-            while (pos.y <= end.y)
+            for (int i = 0; i <= Row; ++i)
             {
-
-                var gObj = Instantiate(cellPrefab, pos, Quaternion.identity) as CACell;
-                gObj.cellID = count;
-                gObj.sim = this;
-                count++;
-
-                cellList.Add(gObj);
-
-                pos.x += (cellPrefab.transform.localScale.x * ratio) + offset.x;
-                if (pos.x > end.x)
+                for (int j = 0; j <= Column; ++j)
                 {
-                    pos.x = corner.x;
-                    pos.y += (cellPrefab.transform.localScale.y * ratio) + offset.y;
-                }
+                    var gObj = Instantiate(cellPrefab, pos, Quaternion.identity) as CACell;
+                    gObj.transform.localScale = new Vector3(CellSize, CellSize);
+                    gObj.cellID = count;
+                    gObj.sim = this;
+                    gObj.gameObject.transform.parent = gameObject.transform;
+                    ++count;
+                    gObj.name = cellPrefab.name;
+                    cellList.Add(gObj);
 
+                    pos.x += (CellSize * ratio) + offset.x;
+                    if (pos.x >= end.x)
+                    {
+                        pos.x = corner.x;
+                        pos.y += (CellSize * ratio) + offset.y;
+                    }
+                }
             }
 
+                /*while (pos.y <= end.y)
+                {
 
-            Count = count;
+                    var gObj = Instantiate(cellPrefab, pos, Quaternion.identity) as CACell;
+                    gObj.cellID = count;
+                    gObj.sim = this;
+                    count++;
 
-            Row = Mathf.Ceil(end.y / (cellPrefab.transform.localScale.y * ratio + offset.y));
-            Column = Mathf.Ceil(end.x / (cellPrefab.transform.localScale.x * ratio + offset.x));
+                    cellList.Add(gObj);
+
+                    pos.x += (cellPrefab.transform.localScale.x * ratio) + offset.x;
+                    if (pos.x > end.x)
+                    {
+                        pos.x = corner.x;
+                        pos.y += (cellPrefab.transform.localScale.y * ratio) + offset.y;
+                    }
+
+                }*/
 
 
-            //caFront = new CAField<CellData>(Width, Height);
-            //caBack = new CAField<CellData>(Width, Height);
+                Count = count;
+
+           // Row = Mathf.Ceil(end.y / (cellPrefab.transform.localScale.y * ratio + offset.y));
+           // Column = Mathf.Ceil(end.x / (cellPrefab.transform.localScale.x * ratio + offset.x));
+
+            caFront = new CAField<CellData>(Column, Row);
+            caBack = new CAField<CellData>(Column, Row);
         }
 
 
@@ -210,9 +245,9 @@ namespace FluidCA.Sim
                 }
             }
 
-            for (int x = 0; x < Width; ++x)
+            for (int x = 0; x < Column; ++x)
             {
-                for (int y = 0; y < Height; ++y)
+                for (int y = 0; y < Row; ++y)
                 {
                     var curr = caFront.getCell(x, y);
                     if (curr.cType == CellType.Solid)
