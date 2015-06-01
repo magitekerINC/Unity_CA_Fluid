@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using FluidCA.Util;
+using System;
+using System.Collections;
 
 namespace FluidCA.Sim
 {
-    public struct CellData
+    public class CellData
     {
         public CellType cType;
         public float cellMass;
@@ -55,21 +57,22 @@ namespace FluidCA.Sim
             Offset = 0.005f;
             Speed = 3000f;
             Detail = 10f;
-            Variance = 10f;
+            Variance = 100f;
             TimeUnit = 60f / Time.deltaTime;
             MinMass = 0.1f;
             MaxMass = 1f;
             CellSize = cellPrefab.transform.localScale.x;
             Row = 32f;
             Column = 51f;
-            Init();
+            StartCoroutine(Init());
 
         }
 
         public void Reset()
         {
+            StopAllCoroutines();
             CleanUp();
-            Init();
+            StartCoroutine(Init());
         }
 
         void CleanUp()
@@ -84,7 +87,7 @@ namespace FluidCA.Sim
             caBack.Clear();
         }
 
-        void Init()
+        IEnumerator Init()
         {
 
             var corner = Camera.main.ScreenToWorldPoint(Vector3.zero);
@@ -102,7 +105,7 @@ namespace FluidCA.Sim
                 (offset.y + CellSize * ratio) * Row
                 );
 
-         
+
             //corner *= ratio;
             corner.z = 1f;
 
@@ -128,36 +131,66 @@ namespace FluidCA.Sim
                         pos.x = corner.x;
                         pos.y += (CellSize * ratio) + offset.y;
                     }
+
                 }
             }
-
-                /*while (pos.y <= end.y)
-                {
-
-                    var gObj = Instantiate(cellPrefab, pos, Quaternion.identity) as CACell;
-                    gObj.cellID = count;
-                    gObj.sim = this;
-                    count++;
-
-                    cellList.Add(gObj);
-
-                    pos.x += (cellPrefab.transform.localScale.x * ratio) + offset.x;
-                    if (pos.x > end.x)
-                    {
-                        pos.x = corner.x;
-                        pos.y += (cellPrefab.transform.localScale.y * ratio) + offset.y;
-                    }
-
-                }*/
-
-
-                Count = count;
-
-           // Row = Mathf.Ceil(end.y / (cellPrefab.transform.localScale.y * ratio + offset.y));
-           // Column = Mathf.Ceil(end.x / (cellPrefab.transform.localScale.x * ratio + offset.x));
+            yield return 0;
+            Count = count;
 
             caFront = new CAField<CellData>(Column, Row);
             caBack = new CAField<CellData>(Column, Row);
+
+            initCAData(ref caFront);
+            initCAData(ref caBack);
+
+            UpdateCells();
+        }
+
+        private void initCAData(ref CAField<CellData> data)
+        {
+
+            var landMap = PerlinNoise.generatePerlinNoise(
+                   (int)Column,
+                   (int)Row,
+                   Detail,
+                   Variance
+                   );
+
+
+            for (int i = 0; i < Column; ++i)
+                for (int j = 0; j < Row; ++j)
+                {
+
+                    var landType = (int)(landMap[i][j] % 4);
+                    var cType = CellType.Air;
+                    var mass = 0f;
+                    switch (landType)
+                    {
+                        case 0:
+                            cType = CellType.Solid;
+                            mass = 1.0f;
+                            break;
+                        case 1:
+                            cType = CellType.Air;
+                            mass = 0.0f;
+                            break;
+                        case 2:
+                            cType = CellType.Water;
+                            mass = 1.0f;
+                            break;
+                        case 3:
+                            cType = CellType.Water;
+                            mass = 1.0f;
+                            break;
+                        default:
+                            cType = CellType.Air;
+                            mass = 0f;
+                            break;
+                    }
+
+                    var cData = new CellData(cType, mass);
+                    data.setCell(i, j, cData);
+                }
         }
 
 
@@ -169,17 +202,17 @@ namespace FluidCA.Sim
             }
 
             Vector2 result = Vector2.zero;
-            result.x = Mathf.Ceil(index % Row);
-            result.y = Mathf.Floor(index / Row);
+            result.x = Mathf.Ceil(index % Column);
+            result.y = Mathf.Floor(index / Column);
 
             return result;
         }
 
-        private int getIndex(Vector2 pos)
+        private int getIndex(int posx, int posy)
         {
             int result = 0;
 
-            result = (int)(pos.y + (pos.x * Column));
+            result = (int)(posy + (posx * Column));
 
             return result;
         }
@@ -195,7 +228,17 @@ namespace FluidCA.Sim
                 {
                     simTimer += TimeUnit;
                     TickCA();
+                    UpdateCells();
                 }
+            }
+
+        }
+
+        void UpdateCells()
+        {
+            for (int i = 0; i < cellList.Count; ++i)
+            {
+                cellList[i].UpdateCell(getCellData(cellList[i].cellID));
             }
         }
 
@@ -204,7 +247,8 @@ namespace FluidCA.Sim
 #if UNITY_EDITOR
             Debug.Log("Tick");
 #endif
-            if (caFront == null || caBack == null)
+            if (caFront.Equals(null) ||
+                caBack.Equals(null))
                 return;
 
             float flowScore = 0f;
@@ -270,10 +314,11 @@ namespace FluidCA.Sim
 
         public CellData getCellData(int id)
         {
-            if (id < Count && caFront != null)
+            if (id < Count && !caFront.Equals(null))
             {
-                int xPos = (int)(id % Width);
-                int yPos = (int)((id - xPos) / Width);
+                int xPos = (int)(id % Column);
+                int yPos = (int)((id - xPos) / Column);
+
 
                 return caFront.getCell(xPos, yPos);
             }

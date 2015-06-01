@@ -7,7 +7,7 @@ namespace FluidCA.Sim
 {
 
 
-    public class CAField<T>
+    public struct CAField<T>
     {
         private int Width, Height;
         private T[,] cells;
@@ -17,21 +17,25 @@ namespace FluidCA.Sim
             Width = (int)_width;
             Height = (int)_height;
 
-            cells = new T[Width, Height];
+            cells = new T[
+                Width,
+                Height
+                ];
 
+      
         }
 
         public T getCell(int x, int y)
         {
-            return cells[x, y];
+            return cells[x % Width, y % Height];
         }
 
-        protected T[,] getCells()
+        T[,] getCells()
         {
             return cells;
         }
 
-        public void setCell(int x, int y, ref T _cell)
+        public void setCell(int x, int y, T _cell)
         {
             cells[x, y] = _cell;
         }
@@ -137,17 +141,33 @@ namespace FluidCA.Sim
     public class CACell : MonoBehaviour
     {
         public FluidSim sim { get; set; }
-        public int cellID { get; set; }
+        public int cellID = 0;
         public Color cellColor { set { rend.color = value; } }
         private SpriteRenderer rend;
 
         // Use this for initialization
-        void Start()
+        void Awake()
         {
             rend = GetComponent<SpriteRenderer>();
             
         }
 
+
+        public void UpdateCell(CellData cell)
+        {
+            switch(cell.cType)
+            {
+                case CellType.Solid:
+                    rend.color = Color.gray;
+                    break;
+                case CellType.Air:
+                    rend.color = Color.white;
+                    break;
+                case CellType.Water:
+                    rend.color = Color.blue;
+                    break;
+            }
+        }
 
     }
 }
