@@ -151,12 +151,6 @@ namespace FluidCA.Sim
         void StartUp()
         {
 
-
-            SimMaxMass = minMSlider.value;
-            SimWidth = widthSlider.value;
-            SimHeight = heightSlider.value;
-            SimSpeed = speedSlider.value;
-
             detailSlider.value = PerlinDetail;
             variSlider.value = PerlinVariance;
             offsetSlider.value = SimOffset;

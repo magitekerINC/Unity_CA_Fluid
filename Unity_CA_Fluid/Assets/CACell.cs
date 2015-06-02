@@ -126,7 +126,7 @@ namespace FluidCA.Sim
 
         public void Copy(ref CAField<T> _other)
         {
-            this.cells = _other.getCells();
+            this.cells = (T[,])(_other.getCells().Clone());
         }
 
         public void Clear()
@@ -134,37 +134,53 @@ namespace FluidCA.Sim
             Array.Clear(cells, 0, cells.Length);
         }
 
+        public T this[int xkey, int ykey]
+        {
+            get { return cells[xkey, ykey]; }
+        }
+
     }
 
-    public enum CellType { Solid = 0, Air = 1, Water = 2, NumTypes }
+    public enum CellType : int
+    { 
+        Solid = 0,
+        Air = 1,
+        Water = 2,
+        NumTypes
+    }
 
     public class CACell : MonoBehaviour
     {
         public FluidSim sim { get; set; }
         public int cellID = 0;
-        public Color cellColor { set { rend.color = value; } }
+        public Color cellColor { get; set; }
         private SpriteRenderer rend;
 
         // Use this for initialization
         void Awake()
         {
             rend = GetComponent<SpriteRenderer>();
-            
+            cellColor = Color.white;
         }
 
+        void FixedUpdate()
+        {
+            rend.color = cellColor;
+        }
 
         public void UpdateCell(CellData cell)
         {
             switch(cell.cType)
             {
                 case CellType.Solid:
-                    rend.color = Color.gray;
+                    cellColor = Color.gray;
                     break;
                 case CellType.Air:
-                    rend.color = Color.white;
+                    cellColor = Color.white;
                     break;
                 case CellType.Water:
-                    rend.color = Color.blue;
+                    cellColor = Color.Lerp(Color.white, Color.blue,
+                        Mathf.Max((cell.cellMass - sim.MinMass) / (sim.MaxMass - sim.MinMass), 0.5f));
                     break;
             }
         }
