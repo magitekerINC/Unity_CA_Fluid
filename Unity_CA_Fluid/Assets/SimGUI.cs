@@ -40,7 +40,8 @@ namespace FluidCA.Sim
         public float SimWidth 
         {
             get { return sim.Column; }
-            set { 
+            set {
+                PlaySim = false;
                 sim.Column = value;
                 widthVal.text = value.ToString();
             } 
@@ -49,7 +50,8 @@ namespace FluidCA.Sim
         public float SimHeight 
         {
             get { return sim.Row; }
-            set { 
+            set {
+                PlaySim = false;
                 sim.Row = value;
                 heightVal.text = value.ToString();
             }
@@ -106,7 +108,8 @@ namespace FluidCA.Sim
         {
             get { return sim.runSim; }
             set 
-            { 
+            {
+                runToggle.isOn = value;
                 sim.runSim = value; 
             }
         }

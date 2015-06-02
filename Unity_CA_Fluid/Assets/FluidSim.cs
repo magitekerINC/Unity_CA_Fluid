@@ -56,11 +56,11 @@ namespace FluidCA.Sim
             ratio = Height / Width;
             Offset = 0.00f;
             Speed = 3000f;
-            Detail = 10f;
+            Detail = 20f;
             Variance = 100f;
-            TimeUnit = 3000f;
+            TimeUnit = 1000f;
             MinMass = 0.0001f;
-            MaxMass = 1.5f;
+            MaxMass = 1f;
             MaxCompress = 0.02f;
             CellSize = cellPrefab.transform.localScale.x;
             Row = 32f;
@@ -190,6 +190,13 @@ namespace FluidCA.Sim
                             break;
                     }
 
+                    if (i == 0 ||
+                        i == Column - 1 ||
+                        j == 0 || j == Row - 1)
+                    {
+                        cType = CellType.Solid;
+                    }
+
                     var cData = new CellData(cType, mass);
                     data.setCell(i, j, cData);
                 }
@@ -225,13 +232,14 @@ namespace FluidCA.Sim
         {
             if (runSim)
             {
-                simTimer -= Speed * Time.deltaTime;
-                if (simTimer <= 0f)
-                {
+              //  simTimer -= Speed * Time.deltaTime;
+              //  if (simTimer <= 0f)
+              //  {
                     simTimer += TimeUnit;
                     TickCA();
-                }
                     UpdateCells();
+               // }
+
             }
 
         }
@@ -253,11 +261,11 @@ namespace FluidCA.Sim
                 caBack.Equals(null))
                 return;
 
-            float spd = Speed;
+            float spd = 1f;
             float flowScore = 0f;
-            for (int x = 0; x < Column; ++x)
+            for (int x = (int)(Column - 1); x >= 1; --x)
             {
-                for (int y = 0; y < Row; ++y)
+                for (int y = (int)(Row - 1); y >= 1; --y)
                 {
                     var curr = caFront[x, y];
                     float flow = 0f;
@@ -270,7 +278,7 @@ namespace FluidCA.Sim
                         //Below
                         if (rMass > 0 && y - 1 >= 0 && caFront[x, y - 1].cType != CellType.Solid)
                         {
-                            flow = stableMass((rMass + caFront[x, y - 1].cellMass) - caFront[x, y - 1].cellMass);
+                            flow = stableMass(rMass + caFront[x, y - 1].cellMass) - caFront[x,y-1].cellMass;
                             if (flow > minFlow) flow *= 0.5f;
 
                             flow = Mathf.Clamp(flow, 0f, Mathf.Min(spd, rMass));
@@ -284,7 +292,7 @@ namespace FluidCA.Sim
                         //Left
                         if (rMass > 0 && x + 1 < Column && caFront[x + 1, y].cType != CellType.Solid)
                         {
-                            flow = stableMass((rMass + caFront[x + 1, y].cellMass) - caFront[x + 1, y].cellMass);
+                            flow =  (curr.cellMass - caFront[x+1, y].cellMass) * 0.25f;
                             if (flow > minFlow) flow *= 0.5f;
 
                             flow = Mathf.Clamp(flow, 0f, rMass);
@@ -298,7 +306,7 @@ namespace FluidCA.Sim
                         //Right
                         if (rMass > 0 && x - 1 >= 0 && caFront[x - 1, y].cType != CellType.Solid)
                         {
-                            flow = stableMass((rMass + caFront[x - 1, y].cellMass) - caFront[x - 1, y].cellMass);
+                            flow = (curr.cellMass - caFront[x - 1, y].cellMass) * 0.25f;
                             if (flow > minFlow) flow *= 0.5f;
 
                             flow = Mathf.Clamp(flow, 0f, rMass);
@@ -312,7 +320,7 @@ namespace FluidCA.Sim
                         //Above
                         if (rMass > 0 && y + 1 < Row && caFront[x, y + 1].cType != CellType.Solid)
                         {
-                            flow = stableMass((rMass + caFront[x, y + 1].cellMass) - caFront[x, y + 1].cellMass);
+                            flow = rMass - stableMass(rMass + caFront[x, y + 1].cellMass);
                             if (flow > minFlow) flow *= 0.5f;
 
                             flow = Mathf.Clamp(flow, 0f, Mathf.Min(spd, rMass));
@@ -330,8 +338,8 @@ namespace FluidCA.Sim
                         else
                         {
                             caBack[x, y].cType = CellType.Air;
-                            caBack[x, y].cellMass = 0f;
                         }
+       
                     }
                 }
             }

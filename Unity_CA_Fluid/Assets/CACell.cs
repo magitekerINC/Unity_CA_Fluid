@@ -163,7 +163,7 @@ namespace FluidCA.Sim
             cellColor = Color.white;
         }
 
-        void FixedUpdate()
+        void Update()
         {
             rend.color = cellColor;
         }
