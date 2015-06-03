@@ -52,8 +52,8 @@ namespace FluidCA.Sim
             runSim = false;
             Width = Screen.width;
             Height = Screen.height;
-            ratio = Height / Width;
-            Offset = 0.00f;
+            ratio = Width / Height;
+            Offset = 0f;
             Speed = 1000f;
             Detail = 20f;
             Variance = 100f;
@@ -62,8 +62,8 @@ namespace FluidCA.Sim
             MaxMass = 1f;
             MaxCompress = 0.2f;
             CellSize = cellPrefab.transform.localScale.x;
-            Row = 33;//33f;
-            Column = 52; // 52f;
+            Row = 39;//33f;
+            Column = 63; // 52f;
             Init();
 
         }
@@ -90,15 +90,12 @@ namespace FluidCA.Sim
         void Init()
         {
             cellList = new List<CACell>();
-            var corner = Vector3.zero;
+            var corner = new Vector3(CellSize * 0.5f, CellSize * 0.5f);
 
-            var offset = new Vector3(Offset, Offset);
+            var vE = 2f * Camera.main.orthographicSize;
+            var hE = vE * ratio;
 
-            var end = new Vector2(
-                (offset.x + CellSize * ratio) * Column,
-                (offset.y + CellSize * ratio) * Row
-                );
-
+            Debug.Log(vE + " " + hE);
 
             //corner *= ratio;
             corner.z = 1f;
@@ -106,12 +103,12 @@ namespace FluidCA.Sim
             var pos = corner;
             var count = 0;
 
-            for (int i = 0; i < Column; ++i)
+            for (int i = 0; i < Row; ++i)
             {
-                for (int j = 0; j < Row; ++j)
+                for (int j = 0; j < Column; ++j)
                 {
                     var gObj = Instantiate(cellPrefab, pos, Quaternion.identity) as CACell;
-                    gObj.transform.localScale = new Vector3(CellSize, CellSize);
+                    //gObj.transform.localScale = new Vector3(CellSize, CellSize);
                     gObj.cellID = count;
                     gObj.sim = this;
                     gObj.gameObject.transform.parent = gameObject.transform;
@@ -119,14 +116,11 @@ namespace FluidCA.Sim
                     gObj.name = cellPrefab.name;
                     cellList.Add(gObj);
 
-                    pos.x += (CellSize * ratio) + offset.x;
-                    if (pos.x >= end.x)
-                    {
-                        pos.x = corner.x;
-                        pos.y += (CellSize * ratio) + offset.y;
-                    }
-
+                    pos.x += (CellSize) * 0.5f + Offset;
                 }
+
+                pos.x = corner.x;
+                pos.y += (CellSize) * 0.5f + Offset;
             }
         
             Count = count;
@@ -204,7 +198,7 @@ namespace FluidCA.Sim
             }
 
             Vector2 result = Vector2.zero;
-            result.x = Mathf.Ceil(index % Column);
+            result.x = index % Column;
             result.y = Mathf.Floor(index / Column);
 
             return result;
