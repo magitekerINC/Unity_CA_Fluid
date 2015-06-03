@@ -27,7 +27,7 @@ namespace FluidCA.Sim
 
         public T getCell(int x, int y)
         {
-            return cells[x % Width, y % Height];
+            return cells[x, y];
         }
 
         T[,] getCells()
@@ -126,7 +126,7 @@ namespace FluidCA.Sim
 
         public void Copy(ref CAField<T> _other)
         {
-            this.cells = (T[,])(_other.getCells().Clone());
+            this.cells = _other.getCells();
         }
 
         public void Clear()
@@ -137,6 +137,7 @@ namespace FluidCA.Sim
         public T this[int xkey, int ykey]
         {
             get { return cells[xkey, ykey]; }
+            set { cells[xkey, ykey] = value; }
         }
 
     }
@@ -165,7 +166,8 @@ namespace FluidCA.Sim
 
         void Update()
         {
-            rend.color = cellColor;
+                rend.color = cellColor;
+              //  UpdateCell(sim.getCellData(cellID));
         }
 
         public void UpdateCell(CellData cell)
@@ -180,7 +182,9 @@ namespace FluidCA.Sim
                     break;
                 case CellType.Water:
                     cellColor = Color.Lerp(Color.white, Color.blue,
-                        Mathf.Max((cell.cellMass - sim.MinMass) / (sim.MaxMass - sim.MinMass), 0.5f));
+                        Mathf.Max(
+                        (cell.cellMass - sim.MinMass) / (sim.MaxMass - sim.MinMass),
+                        0.2f));
                     break;
             }
         }

@@ -39,7 +39,6 @@ namespace FluidCA.Sim
         public float simTimer = 0f;
         public float TimeUnit = 3000f;
         public float ratio = 0f;
-        public float minFlow = 0.01f, maxFlow = 0.5f;
 
         private int Count = 0;
 
@@ -55,17 +54,17 @@ namespace FluidCA.Sim
             Height = Screen.height;
             ratio = Height / Width;
             Offset = 0.00f;
-            Speed = 3000f;
+            Speed = 1000f;
             Detail = 20f;
             Variance = 100f;
             TimeUnit = 1000f;
             MinMass = 0.0001f;
             MaxMass = 1f;
-            MaxCompress = 0.02f;
+            MaxCompress = 0.2f;
             CellSize = cellPrefab.transform.localScale.x;
-            Row = 32f;
-            Column = 52f;
-            StartCoroutine(Init());
+            Row = 33;//33f;
+            Column = 52; // 52f;
+            Init();
 
         }
 
@@ -73,7 +72,7 @@ namespace FluidCA.Sim
         {
             StopAllCoroutines();
             CleanUp();
-            StartCoroutine(Init());
+            Init();
         }
 
         void CleanUp()
@@ -88,16 +87,10 @@ namespace FluidCA.Sim
             caBack.Clear();
         }
 
-        IEnumerator Init()
+        void Init()
         {
-
-            var corner = Camera.main.ScreenToWorldPoint(Vector3.zero);
-            //ratio = Screen.height / Screen.width;
-            /*var end = Camera.main.ScreenToWorldPoint(
-                new Vector3(
-                Screen.width,
-                Screen.height
-                ));*/
+            cellList = new List<CACell>();
+            var corner = Vector3.zero;
 
             var offset = new Vector3(Offset, Offset);
 
@@ -113,9 +106,9 @@ namespace FluidCA.Sim
             var pos = corner;
             var count = 0;
 
-            for (int i = 0; i <= Row; ++i)
+            for (int i = 0; i < Column; ++i)
             {
-                for (int j = 0; j <= Column; ++j)
+                for (int j = 0; j < Row; ++j)
                 {
                     var gObj = Instantiate(cellPrefab, pos, Quaternion.identity) as CACell;
                     gObj.transform.localScale = new Vector3(CellSize, CellSize);
@@ -135,7 +128,7 @@ namespace FluidCA.Sim
 
                 }
             }
-            yield return 0;
+        
             Count = count;
 
             caFront = new CAField<CellData>(Column, Row);
@@ -164,7 +157,7 @@ namespace FluidCA.Sim
                 {
 
                     var landType = (int)(landMap[i][j] % 4);
-                    var cType = CellType.Air;
+                    var cType = CellType.Solid;
                     var mass = 0f;
                     switch (landType)
                     {
@@ -178,7 +171,7 @@ namespace FluidCA.Sim
                             break;
                         case 2:
                             cType = CellType.Water;
-                            mass = 2.0f;
+                            mass = 1.0f;
                             break;
                         case 3:
                             cType = CellType.Air;
@@ -221,7 +214,7 @@ namespace FluidCA.Sim
         {
             int result = 0;
 
-            result = (int)(posy + (posx * Column));
+            result = (int)(posx + (posy * Column));
 
             return result;
         }
@@ -232,40 +225,44 @@ namespace FluidCA.Sim
         {
             if (runSim)
             {
-              //  simTimer -= Speed * Time.deltaTime;
-              //  if (simTimer <= 0f)
-              //  {
-                    simTimer += TimeUnit;
+               // simTimer -= Speed * Time.deltaTime;
+               // if (simTimer <= 0f)
+               // {
+               //     simTimer += TimeUnit;
                     TickCA();
-                    UpdateCells();
                // }
-
+                    UpdateCells();
             }
 
         }
 
         void UpdateCells()
         {
+            
+            for(int x=0; x < Column; ++x)
+                for (int y = 0; y < Row; ++y)
+                {
+                    var index = getIndex(x, y);
+                    cellList[index].UpdateCell(caFront[x, y]);
+                }
+            
+            /*
             for (int i = 0; i < cellList.Count; ++i)
             {
-                cellList[i].UpdateCell(getCellData(cellList[i].cellID));
-            }
+                cellList[i].UpdateCell(
+                    getCellData(cellList[i].cellID)
+                    );
+            }*/
         }
 
         void TickCA()
         {
-#if UNITY_EDITOR
-            //Debug.Log("Tick");
-#endif
-            if (caFront.Equals(null) ||
-                caBack.Equals(null))
-                return;
 
             float spd = 1f;
             float flowScore = 0f;
-            for (int x = (int)(Column - 1); x >= 1; --x)
+            for (int x = 1; x < Column; ++x)
             {
-                for (int y = (int)(Row - 1); y >= 1; --y)
+                for (int y = 1; y < Row; ++y)
                 {
                     var curr = caFront[x, y];
                     float flow = 0f;
@@ -278,8 +275,8 @@ namespace FluidCA.Sim
                         //Below
                         if (rMass > 0 && y - 1 >= 0 && caFront[x, y - 1].cType != CellType.Solid)
                         {
-                            flow = stableMass(rMass + caFront[x, y - 1].cellMass) - caFront[x,y-1].cellMass;
-                            if (flow > minFlow) flow *= 0.5f;
+                            flow = stableMass(rMass + caFront[x, y - 1].cellMass) - caFront[x, y - 1].cellMass;
+                            if (flow > MinMass) flow *= 0.5f;
 
                             flow = Mathf.Clamp(flow, 0f, Mathf.Min(spd, rMass));
 
@@ -289,11 +286,12 @@ namespace FluidCA.Sim
                             rMass -= flow;
                         }
 
+
                         //Left
                         if (rMass > 0 && x + 1 < Column && caFront[x + 1, y].cType != CellType.Solid)
                         {
-                            flow =  (curr.cellMass - caFront[x+1, y].cellMass) * 0.25f;
-                            if (flow > minFlow) flow *= 0.5f;
+                            flow = (curr.cellMass - caFront[x + 1, y].cellMass) * 0.25f;
+                            if (flow > MinMass) flow *= 0.5f;
 
                             flow = Mathf.Clamp(flow, 0f, rMass);
 
@@ -302,12 +300,12 @@ namespace FluidCA.Sim
                             flowScore += flow;
                             rMass -= flow;
                         }
-
+    
                         //Right
                         if (rMass > 0 && x - 1 >= 0 && caFront[x - 1, y].cType != CellType.Solid)
                         {
                             flow = (curr.cellMass - caFront[x - 1, y].cellMass) * 0.25f;
-                            if (flow > minFlow) flow *= 0.5f;
+                            if (flow > MinMass) flow *= 0.5f;
 
                             flow = Mathf.Clamp(flow, 0f, rMass);
 
@@ -316,12 +314,12 @@ namespace FluidCA.Sim
                             flowScore += flow;
                             rMass -= flow;
                         }
-
+           
                         //Above
                         if (rMass > 0 && y + 1 < Row && caFront[x, y + 1].cType != CellType.Solid)
                         {
                             flow = rMass - stableMass(rMass + caFront[x, y + 1].cellMass);
-                            if (flow > minFlow) flow *= 0.5f;
+                            if (flow > MinMass) flow *= 0.5f;
 
                             flow = Mathf.Clamp(flow, 0f, Mathf.Min(spd, rMass));
 
@@ -331,27 +329,38 @@ namespace FluidCA.Sim
                             rMass -= flow;
                         }
 
-                        if (caBack[x, y].cellMass > MinMass)
-                        {
-                            caBack[x, y].cType = CellType.Water;
-                        }
-                        else
-                        {
-                            caBack[x, y].cType = CellType.Air;
-                        }
+                        //var index = getIndex(x, y);
+                        //cellList[index].UpdateCell(caFront[x, y]);
        
                     }
                 }
             }
 
-            /*
-            for (int x = 0; x < Column; ++x )
-            {
-                caBack[x,0].cellMass = 0f;
-                caBack[x,0].cType = CellType.Air;
-            }*/
+            for (int x = 1; x < Column; ++x)
+                for (int y = 1; y < Row; ++y)
+                {
+                    if (caBack[x, y].cType != CellType.Solid)
+                    {
+                        if (caBack[x, y].cellMass >= MinMass)
+                        {
+                            caBack[x, y].cType = CellType.Water;
 
-            caFront.Copy(ref caBack);
+                        }
+                        else
+                        {
+                            caBack[x, y].cType = CellType.Air;
+                        }
+                    }
+                }
+
+                    /*
+                    for (int x = 0; x < Column; ++x )
+                    {
+                        caBack[x,0].cellMass = 0f;
+                        caBack[x,0].cType = CellType.Air;
+                    }*/
+
+                    caFront.Copy(ref caBack);
 
         }
 
@@ -363,7 +372,7 @@ namespace FluidCA.Sim
                 int yPos = (int)((id - xPos) / Column);
 
 
-                return caFront.getCell(xPos, yPos);
+                return caFront[xPos, yPos];
             }
 
             throw new System.IndexOutOfRangeException();
@@ -373,7 +382,7 @@ namespace FluidCA.Sim
         {
             if (mass <= 1f)
                 return 1f;
-            else if (mass < 2 * MaxMass + MaxCompress)
+            else if (mass < 2f * MaxMass + MaxCompress)
                 return (MaxMass * MaxMass + mass * MaxCompress) / (MaxMass + MaxCompress);
             else
                 return (mass + MaxCompress) * 0.5f;

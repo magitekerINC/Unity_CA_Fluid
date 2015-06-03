@@ -10,7 +10,6 @@ GameObject:
   - 4: {fileID: 441510}
   - 212: {fileID: 21200032}
   - 114: {fileID: 11431698}
-  - 61: {fileID: 6183872}
   m_Layer: 0
   m_Name: Cell
   m_TagString: Untagged
@@ -30,19 +29,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
---- !u!61 &6183872
-BoxCollider2D:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 171214}
-  m_Enabled: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_Offset: {x: 0, y: 0}
-  serializedVersion: 2
-  m_Size: {x: .639999986, y: .639999986}
 --- !u!114 &11431698
 MonoBehaviour:
   m_ObjectHideFlags: 1
