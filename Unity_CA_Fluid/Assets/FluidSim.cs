@@ -89,13 +89,17 @@ namespace FluidCA.Sim
 
         void Init()
         {
-            cellList = new List<CACell>();
+           
             var corner = new Vector3(CellSize * 0.5f, CellSize * 0.5f);
 
             var vE = 2f * Camera.main.orthographicSize;
             var hE = vE * ratio;
 
-            Debug.Log(vE + " " + hE);
+            Row = Mathf.Floor((vE / CellSize) * 2f);
+            Column = Mathf.Floor((hE / CellSize) * 2f);
+
+            cellList = new List<CACell>((int)(Row * Column));
+            Debug.Log(Row + " " + Column);
 
             //corner *= ratio;
             corner.z = 1f;
@@ -108,7 +112,7 @@ namespace FluidCA.Sim
                 for (int j = 0; j < Column; ++j)
                 {
                     var gObj = Instantiate(cellPrefab, pos, Quaternion.identity) as CACell;
-                    //gObj.transform.localScale = new Vector3(CellSize, CellSize);
+                    gObj.transform.localScale = new Vector3(CellSize, CellSize);
                     gObj.cellID = count;
                     gObj.sim = this;
                     gObj.gameObject.transform.parent = gameObject.transform;

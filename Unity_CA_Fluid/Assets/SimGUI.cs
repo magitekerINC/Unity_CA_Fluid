@@ -147,7 +147,7 @@ namespace FluidCA.Sim
             if (!OpenButton.activeSelf)
                 OpenButton.SetActive(true);
             sim = GetComponent<FluidSim>();
-            StartUp();
+            //StartUp();
 
         }
 
@@ -156,7 +156,7 @@ namespace FluidCA.Sim
 
             detailSlider.value = PerlinDetail;
             variSlider.value = PerlinVariance;
-            offsetSlider.value = SimOffset;
+            //offsetSlider.value = SimOffset;
             minMSlider.value = SimMinMass;
             maxMSlider.value = SimMaxMass;
             compSlider.value = SimMaxCompress;
@@ -180,7 +180,7 @@ namespace FluidCA.Sim
         public void ResetSim()
         {
             sim.Reset();
-            StartUp();
+            //StartUp();
         }
     }
 }
