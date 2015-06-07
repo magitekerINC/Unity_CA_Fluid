@@ -167,7 +167,14 @@ namespace FluidCA.Sim
         void Update()
         {
                 rend.color = cellColor;
-              //  UpdateCell(sim.getCellData(cellID));
+        }
+
+        void OnMouseOver()
+        {
+            if (Input.GetMouseButton(0))
+            {
+                sim.PaintCell(cellID);
+            }
         }
 
         public void UpdateCell(CellData cell)

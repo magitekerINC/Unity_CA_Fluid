@@ -109,7 +109,8 @@ namespace FluidCA.Sim
             get { return sim.runSim; }
             set 
             {
-                runToggle.isOn = value;
+                palRunToggle.isOn = value;
+                cfgRunToggle.isOn = value;
                 sim.runSim = value; 
             }
         }
@@ -124,7 +125,8 @@ namespace FluidCA.Sim
         public Slider speedSlider;
         public Slider variSlider;
         public Slider offsetSlider;
-        public Toggle runToggle;
+        public Toggle palRunToggle;
+        public Toggle cfgRunToggle;
 
         public Text cellSizeVal;
         public Text widthVal;
@@ -160,27 +162,53 @@ namespace FluidCA.Sim
             minMSlider.value = SimMinMass;
             maxMSlider.value = SimMaxMass;
             compSlider.value = SimMaxCompress;
-            runToggle.isOn = PlaySim = false;
+            palRunToggle.isOn = cfgRunToggle.isOn = PlaySim = false;
             cellSizeSlider.value = SimCellSize;
         }
 
        
         public void OpenControls()
         {
+            sim.guiOpen = true;
             OpenButton.SetActive(false);
             ControlPanel.SetActive(true);
         }
 
         public void CloseControls()
         {
+            sim.guiOpen = false;
             ControlPanel.SetActive(false);
             OpenButton.SetActive(true);
         }
 
         public void ResetSim()
         {
-            sim.Reset();
-            //StartUp();
+            PlaySim = false;
+            sim.ResetSim();
+        }
+
+        public void ChangeCellBrush(string type)
+        {
+            switch(type)
+            {
+                case "solid":
+                    sim.cellBrush = CellType.Solid;
+                    break;
+                case "air":
+                    sim.cellBrush = CellType.Air;
+                    break;
+                case "water":
+                    sim.cellBrush = CellType.Water;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void ClearSim()
+        {
+            sim.ClearSim();
+            PlaySim = false;
         }
     }
 }
