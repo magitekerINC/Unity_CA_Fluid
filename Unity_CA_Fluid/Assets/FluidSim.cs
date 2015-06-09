@@ -110,8 +110,8 @@ namespace FluidCA.Sim
         {
             clearSim = false;
 
-            for(int i=0; i < Column; ++i)
-                for (int j = 0; j < Row; ++j)
+            for(int i=1; i < Column-1; ++i)
+                for (int j = 1; j < Row-1; ++j)
                 {
                     caFront[i, j].cType = CellType.Air;
                     caFront[i, j].cellMass = 0f;
@@ -160,7 +160,16 @@ namespace FluidCA.Sim
                 pos.x = corner.x;
                 pos.y += (CellSize) * 0.64f + Offset;
             }
-        
+
+            var cPos = new Vector3(
+                (Column * CellSize * 0.64f) * 0.5f,
+                (Row * CellSize * 0.64f) * 0.5f,
+                Camera.main.transform.position.z
+                );
+
+
+            Camera.main.transform.position = cPos;
+
             Count = count;
 
             caFront = new CAField<CellData>(Column, Row);
